@@ -7,5 +7,5 @@ import com.tngdev.trackmeapp.data.model.Session
 
 @Database(entities = [Session::class, Location::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase(){
-
+    abstract fun sessionDao() : SessionDao
 }

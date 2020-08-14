@@ -11,7 +11,9 @@ import com.tngdev.trackmeapp.util.MapUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class CurrentSessionRepository @Inject constructor(
     private val sessionDao: SessionDao,
     private val appPreferencesHelper: AppPreferencesHelper
@@ -25,7 +27,7 @@ class CurrentSessionRepository @Inject constructor(
         appPreferencesHelper.currentSessionId = session.id
     }
 
-    suspend fun stopCurrentSession(sessionWithLocations: SessionWithLocations, thumbnailPath: String) {
+    suspend fun stopCurrentSession(sessionWithLocations: SessionWithLocations) {
         appPreferencesHelper.currentSessionId = null
 
         // update stop session to db
@@ -44,7 +46,6 @@ class CurrentSessionRepository @Inject constructor(
                 session.apply {
                     endTime = System.currentTimeMillis()
                     isPause = false
-                    this.thumbnailPath = thumbnailPath
                 }
 
                 sessionDao.updateSession(session)

@@ -107,20 +107,6 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
      */
     private var mSettingsClient : SettingsClient ?= null
 
-    /**
-     * Tracks the status of the location updates request. Value changes when the user presses the
-     * Start Updates and Stop Updates buttons.
-     */
-//    private var isTrackingLocation: Boolean = false
-//        set(value) {
-//            field = value
-//            updateUIStatusRecording()
-//            mAppPreferencesHelper.isTrackingLocation = value
-//        }
-
-//    private var isPausing: Boolean = false
-//    private var currentSession: Session ?= null
-
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
     private var mLastKnownLocation: Location? = null
@@ -176,7 +162,6 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
 
         viewModel.currSession.observe(viewLifecycleOwner) {session ->
             session?.let {
-                drawRouteTracking(it)
                 if (it.session.isPause) {
                     binding.tvTextOfFABStart.text = getString(R.string.resume_button_text)
                     binding.flButtonStop.visibility = View.VISIBLE
@@ -191,6 +176,9 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                 binding.flButtonStop.visibility = View.GONE
             }
         }
+
+        // observe to get latest value for isPausing
+        viewModel.isPausing.observe(viewLifecycleOwner) {}
 
         binding.fabStart.setOnClickListener {
             if (checkPermissions()) {
@@ -311,7 +299,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
 
     private fun drawRouteTracking(sessionWithLocations: SessionWithLocations?) {
         // redraw route tracking
-        if (appPreferencesHelper.isTrackingLocation && mMap != null) {
+        if (mMap != null) {
             mRouteLatLngs.clear()
             for (polyLine in mRoutePolyLines)
                 polyLine.remove()
@@ -334,6 +322,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                         val distance = intent.getDoubleExtra(ForegroundOnlyLocationService.EXTRA_DISTANCE, 0.0)
                         val location = intent.getParcelableExtra<Location>(ForegroundOnlyLocationService.EXTRA_LOCATION)
                         updateUISessionValue(distance, speed)
+                        drawRouteTracking(viewModel.currSession.value)
                         location ?.let {
                             addPointToTrackingRoute(LatLng(location.latitude, location.longitude))
                         }
@@ -381,23 +370,6 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
     private fun handlePauseRecording() {
         stopLocationUpdates{}
     }
-
-//    private fun updateUIStatusRecording() {
-//        when {
-//            isTrackingLocation -> {
-//                binding.tvTextOfFABStart.text = getString(R.string.pause_button_text)
-//                binding.flButtonStop.visibility = View.GONE
-//            }
-//            mRecordingPresenter.mIsPause -> {
-//                binding.tvTextOfFABStart.text = getString(R.string.resume_button_text)
-//                binding.flButtonStop.visibility = View.VISIBLE
-//            }
-//            else -> {
-//                binding.tvTextOfFABStart.text = getString(R.string.start_button_text)
-//                binding.flButtonStop.visibility = View.GONE
-//            }
-//        }
-//    }
 
     @SuppressLint("SetTextI18n")
     fun updateUISessionValue(distance : Double, speed : Double) {
@@ -783,7 +755,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             fragmentWeakReference.get() ?.let {
-                it.viewModel.stopCurrentSession(result!!)
+                it.viewModel.stopCurrentSession()
                 it.hideLoading()
                 it.activity?.finish()
                 it.activity?.startActivity(Intent(it.activity, MainActivity::class.java))

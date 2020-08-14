@@ -25,10 +25,10 @@ class RecordingViewModel @ViewModelInject constructor(
         }
     }
 
-    fun stopCurrentSession(thumbnailPath: String) {
+    fun stopCurrentSession() {
         viewModelScope.launch {
             _currSession.value?.let {
-                repository.stopCurrentSession(it, thumbnailPath)
+                repository.stopCurrentSession(it)
             }
         }
     }

@@ -52,7 +52,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/distance_text"/>
+                    android:text="@string/distance_recording_text"/>
                 <TextView
                     android:id="@+id/tvDistance"
                     android:layout_width="wrap_content"
@@ -69,7 +69,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/current_speed_text"/>
+                    android:text="@string/current_speed_recording_text"/>
                 <TextView
                     android:id="@+id/tvCurrSpeed"
                     android:layout_width="wrap_content"

@@ -17,16 +17,17 @@ class RecordingViewModel @ViewModelInject constructor(
     private val application: Application
 ) : ViewModel() {
 
-    private val _currSession: LiveData<SessionWithLocations?> = repository.currentSession
-    val currSession: LiveData<SessionWithLocations?> = _currSession
+    val currSession: LiveData<SessionWithLocations?> = repository.currentSession
 
     private val _saveBitmapCompleted: MutableLiveData<Boolean> = MutableLiveData(false)
     val saveBitmapCompleted: LiveData<Boolean> = _saveBitmapCompleted
 
-//    private val _isTrackingLocation = MutableLiveData<Boolean>(false)
-//    val isTrackingLocation = _isTrackingLocation
+    /**
+     * Use to save thumbnail image to current session after stopping
+     */
+    private var savingSession: Session? = null
 
-    val isPausing: LiveData<Boolean> = _currSession.map { it?.session?.isPause ?: false  }
+    val isPausing: LiveData<Boolean> = currSession.map { it?.session?.isPause ?: false  }
 
     fun startNewSession() {
         viewModelScope.launch {
@@ -36,23 +37,24 @@ class RecordingViewModel @ViewModelInject constructor(
 
     fun stopCurrentSession() {
         viewModelScope.launch {
-            _currSession.value?.let {
+            currSession.value?.let {
                 repository.stopCurrentSession(it)
+                savingSession = it.session
             }
         }
     }
 
-    fun updateCurrentSession(thumbnailPath: String) {
+    fun updateCurrentSession(session: Session?, thumbnailPath: String) {
         viewModelScope.launch {
-            _currSession.value?.let {
-                repository.updateCurrentSession(it.session, thumbnailPath)
+            session?.let {
+                repository.updateCurrentSession(it, thumbnailPath)
             }
         }
     }
 
     fun resumeCurrentSession() {
         viewModelScope.launch {
-            _currSession.value?.let {
+            currSession.value?.let {
                 repository.resumeCurrentSession(it.session)
             }
         }
@@ -60,7 +62,7 @@ class RecordingViewModel @ViewModelInject constructor(
 
     fun pauseCurrentSession() {
         viewModelScope.launch {
-            _currSession.value?.let {
+            currSession.value?.let {
                 repository.pauseCurrentSession(it.session)
             }
         }
@@ -68,14 +70,17 @@ class RecordingViewModel @ViewModelInject constructor(
 
     fun saveBitmapForCurrentSession(bitmap: Bitmap?) {
         viewModelScope.launch {
-            if (bitmap != null && currSession.value != null) {
+            if (bitmap != null && savingSession != null) {
 
+                val sessionId = savingSession?.id
                 val filePath = withContext(Dispatchers.Default) {
-                    Utils.saveBitmapToFile(_currSession.value!!.session.id, bitmap, application)
+                    sessionId?.let {
+                        Utils.saveBitmapToFile(it, bitmap, application)
+                    }
                 }
 
                 filePath?.let {
-                    updateCurrentSession(it)
+                    updateCurrentSession(savingSession, it)
                 }
             }
 

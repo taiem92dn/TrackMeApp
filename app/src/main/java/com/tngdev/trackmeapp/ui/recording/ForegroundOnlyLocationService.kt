@@ -141,6 +141,7 @@ class ForegroundOnlyLocationService : LifecycleService() {
             }
         }
 
+        // observe to get latest value
         repository.currentSession.observe(this) {
 
         }

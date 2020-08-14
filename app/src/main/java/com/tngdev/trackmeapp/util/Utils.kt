@@ -9,6 +9,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class Utils {
@@ -25,6 +27,11 @@ class Utils {
             val second = duration.rem(60)
 
             return String.format("%02d:%02d:%02d", hour, minute, second)
+        }
+
+        fun dateToString(time: Long) : String {
+            val format = SimpleDateFormat("MMMM dd, yyyy' at 'hh:mm aa", Locale.getDefault())
+            return format.format(Date(time))
         }
 
         fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor {

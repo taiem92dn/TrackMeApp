@@ -12,9 +12,8 @@ interface SessionDao {
     @Query("SELECT * FROM sessions WHERE id = :id")
     suspend fun getSessionById(id: String): Session?
 
-    @Transaction
-    @Query("SELECT * FROM sessions WHERE endTime != 0")
-    fun observeAllHistorySessions(): LiveData<List<SessionWithLocations>>
+    @Query("SELECT * FROM sessions WHERE endTime != 0 ORDER BY startTime DESC")
+    fun observeAllHistorySessions(): LiveData<List<Session>>
 
     @Transaction
     @Query("SELECT * FROM sessions WHERE endTime == 0")

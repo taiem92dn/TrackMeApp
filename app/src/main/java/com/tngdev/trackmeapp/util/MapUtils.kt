@@ -85,17 +85,18 @@ object MapUtils {
     fun requestLocationPermission(pFragment: Fragment) {}
 
 
-    fun zoomToCurrentPosition(mMap: GoogleMap, currentLocation: Location?) {
+    fun zoomToCurrentPosition(map: GoogleMap?, currentLocation: Location?) {
         if (currentLocation == null) {
             Log.d("TAG", "current location null")
             return
         }
+        map?: return
 
         val latLng = LatLng(currentLocation.latitude, currentLocation.longitude)
         val cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15f)
 
         //mMap.addMarker(new MarkerOptions().position(latLng).title("You are here!").icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_ico)));
-        mMap.moveCamera(cameraUpdate)
+        map.moveCamera(cameraUpdate)
     }
 
     fun zoomToPosition(mMap: GoogleMap, latLng: LatLng) {

@@ -6,11 +6,9 @@ import android.app.Activity
 import android.app.ProgressDialog
 import android.content.*
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.location.Location
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
 import android.os.IBinder
 import android.os.Looper
@@ -43,8 +41,6 @@ import com.tngdev.trackmeapp.ui.MainActivity
 import com.tngdev.trackmeapp.util.MapUtils
 import com.tngdev.trackmeapp.util.Utils
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
-import java.lang.ref.WeakReference
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -84,7 +80,8 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
     private var _binding: FragmentRecordingBinding? = null
     private val binding get() = _binding!!
 
-    private var mMap: GoogleMap? = null
+    private var map: GoogleMap? = null
+
 
     private lateinit var mFusedLocationProviderClient : FusedLocationProviderClient
 
@@ -213,14 +210,14 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
      * installed Google Play services and returned to the app.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
+        map = googleMap
 
         setupMap()
     }
 
     private fun setupMap() {
 
-        MapUtils.setLocationEnabledWithPermission(this, mMap)
+        MapUtils.setLocationEnabledWithPermission(this, map)
         getDeviceLocationUsePlayService()
 
         drawRouteTracking(viewModel.currSession.value)
@@ -299,7 +296,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
 
     private fun drawRouteTracking(sessionWithLocations: SessionWithLocations?) {
         // redraw route tracking
-        if (mMap != null) {
+        if (map != null) {
             mRouteLatLngs.clear()
             for (polyLine in mRoutePolyLines)
                 polyLine.remove()
@@ -325,6 +322,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                         drawRouteTracking(viewModel.currSession.value)
                         location ?.let {
                             addPointToTrackingRoute(LatLng(location.latitude, location.longitude))
+                            moveMapToCurrentLocation(it)
                         }
                     }
                     ForegroundOnlyLocationService.ACTION_UPDATE_TIMER -> {
@@ -335,6 +333,18 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                     }
                 }
             }
+        }
+    }
+
+    private fun moveMapToCurrentLocation(currentLocation: Location) {
+        // check distance between center map and currentLocation, if > 100m, move map
+        if (MapUtils.meterDistanceBetweenPoints(
+                currentLocation.latitude,
+                currentLocation.longitude,
+            map?.cameraPosition?.target?.latitude ?: return,
+            map?.cameraPosition?.target?.longitude ?: return) > 100
+        ) {
+            MapUtils.zoomToCurrentPosition(map, currentLocation)
         }
     }
 
@@ -364,7 +374,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
 
         showLoading("Saving session")
         viewModel.stopCurrentSession()
-        mMap?.snapshot(GoogleMap.SnapshotReadyCallback {
+        map?.snapshot(GoogleMap.SnapshotReadyCallback {
             viewModel.saveBitmapForCurrentSession(it)
         })
 
@@ -448,13 +458,13 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                 if (it.isSuccessful && it.result != null) {
                     mLastKnownLocation = it.result
                     Log.d(TAG, "last know location $mLastKnownLocation")
-                    MapUtils.zoomToCurrentPosition(mMap!!, mLastKnownLocation)
+                    MapUtils.zoomToCurrentPosition(map, mLastKnownLocation)
                 } else {
                     val locationCallback = object : LocationCallback() {
                         override fun onLocationResult(locationResult: LocationResult) {
                             locationResult.lastLocation?.let {
                                 mLastKnownLocation = it
-                                MapUtils.zoomToCurrentPosition(mMap!!, mLastKnownLocation)
+                                MapUtils.zoomToCurrentPosition(map, mLastKnownLocation)
                             }
                             mFusedLocationProviderClient.removeLocationUpdates(this)
                         }
@@ -498,19 +508,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
     }
 
     /**
-     * Sets up the location request. Android has two location request settings:
-     * `ACCESS_COARSE_LOCATION` and `ACCESS_FINE_LOCATION`. These settings control
-     * the accuracy of the current location. This sample uses ACCESS_FINE_LOCATION, as defined in
-     * the AndroidManifest.xml.
-     *
-     *
-     * When the ACCESS_FINE_LOCATION setting is specified, combined with a fast update
-     * interval (5 seconds), the Fused Location Provider API returns location updates that are
-     * accurate to within a few feet.
-     *
-     *
-     * These settings are appropriate for mapping applications that show real-time location
-     * updates.
+     * Sets up the location request. Use to get lastLocation for map
      */
     private fun createLocationRequest() {
         mLocationRequest = LocationRequest()
@@ -546,7 +544,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         }
         drawStartLocation(latLngs[0])
         mRouteLatLngs.addAll(latLngs)
-        mRoutePolyLines.add(mMap?.addPolyline(rectLine)!!)
+        mRoutePolyLines.add(map?.addPolyline(rectLine)!!)
 
     }
 
@@ -557,7 +555,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
             rectLine.add(mRouteLatLngs[mRouteLatLngs.size - 1])
             rectLine.add(latLng)
 
-            mRoutePolyLines.add(mMap?.addPolyline(rectLine)!!)
+            mRoutePolyLines.add(map?.addPolyline(rectLine)!!)
         }
         else if (mRouteLatLngs.isEmpty()) {
             drawStartLocation(latLng)
@@ -569,12 +567,12 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         val marker = MarkerOptions().position(latLng).icon(
             BitmapDescriptorFactory.
         fromBitmap(Utils.bitmapFromDrawable(requireContext(), R.drawable.ic_start)))
-        mMap?.addMarker(marker)
+        map?.addMarker(marker)
     }
 
     private fun drawEndLocation(latLng: LatLng) {
         val marker = MarkerOptions().position(latLng).icon(Utils.bitmapDescriptorFromVector(requireContext(), R.drawable.ic_finish))
-        mMap?.addMarker(marker)
+        map?.addMarker(marker)
     }
 
 
@@ -719,7 +717,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                              listener : View.OnClickListener?) {
         activity?.let {
             Snackbar.make(
-                it.findViewById(android.R.id.content),
+                requireView(),
                 mainTextString,
                 Snackbar.LENGTH_LONG)
                 .setAction(actionString, listener).show()

@@ -7,8 +7,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import com.tngdev.trackmeapp.R
+import com.tngdev.trackmeapp.ui.history.HistoryFragment
 import com.tngdev.trackmeapp.ui.recording.RecordingActivity
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,8 +19,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener { view ->
-            startActivity(Intent(this, RecordingActivity::class.java))
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.container, HistoryFragment.newInstance())
+                .commitNow()
         }
     }
 

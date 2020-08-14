@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
@@ -50,10 +51,19 @@ class Utils {
             return null
         }
 
-        fun saveBitmapToFile(bitmap: Bitmap, filename : String) {
+        fun saveBitmapToFile(fileName: String, bitmap: Bitmap, context: Context) : String? {
+
+            val internalFile = context.filesDir
+            val imageFile = File(internalFile?.path + File.separator + "$fileName.png")
+            saveBitmapToFile(bitmap, imageFile.path)
+
+            return imageFile.path
+        }
+
+        fun saveBitmapToFile(bitmap: Bitmap, filePath : String) {
             var out: FileOutputStream? = null
             try {
-                out = FileOutputStream(filename)
+                out = FileOutputStream(filePath)
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out) // bmp is your Bitmap instance
                 // PNG is a lossless format, the compression factor (100) is ignored
             } catch (e: Exception) {

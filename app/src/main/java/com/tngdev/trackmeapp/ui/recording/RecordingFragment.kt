@@ -361,10 +361,19 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         }
         resetUI()
 
+
         showLoading("Saving session")
+        viewModel.stopCurrentSession()
         mMap?.snapshot(GoogleMap.SnapshotReadyCallback {
-            MyTask(this, appPreferencesHelper.currentSessionId!!).execute(it)
+            viewModel.saveBitmapForCurrentSession(it)
         })
+
+        viewModel.saveBitmapCompleted.observe(viewLifecycleOwner) {completed ->
+            if (completed) {
+                hideLoading()
+                exitRecording()
+            }
+        }
     }
 
     private fun handlePauseRecording() {
@@ -389,6 +398,11 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         binding.tvCurrSpeed.text = "0.0 km/h"
         binding.tvDistance.text = "0.0 km"
         binding.tvTime.text ="00:00:00"
+    }
+
+    fun exitRecording() {
+        requireActivity().finish()
+        requireActivity().startActivity(Intent(requireActivity(), MainActivity::class.java))
     }
 
     /**
@@ -714,9 +728,6 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
 
     var mPdLoading : ProgressDialog?= null
 
-    fun showLoading() {
-    }
-
     fun showLoading(message : String) {
         mPdLoading ?: let {
             mPdLoading = ProgressDialog.show(context, null, message)
@@ -725,44 +736,6 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
 
     fun hideLoading() {
         mPdLoading?.dismiss()
-    }
-
-    inner class MyTask() : AsyncTask<Bitmap, Void, String>() {
-
-
-        lateinit var fragmentWeakReference : WeakReference<RecordingFragment>
-        var sessionId : String ?= null
-
-        constructor(fragment : RecordingFragment, sessionId : String) : this() {
-            this.fragmentWeakReference = WeakReference(fragment)
-            this.sessionId = sessionId
-        }
-
-
-        override fun doInBackground(vararg bitmap : Bitmap?): String? {
-            if (fragmentWeakReference.get() != null && bitmap[0] != null) {
-
-                val internalFile = fragmentWeakReference.get()?.context?.filesDir
-                val imageFile = File(internalFile?.path + File.separator + "$sessionId.png")
-                Utils.saveBitmapToFile(bitmap[0]!!, imageFile.path)
-
-                return imageFile.path
-            }
-
-            return null
-        }
-
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-            fragmentWeakReference.get() ?.let {
-                it.viewModel.stopCurrentSession()
-                it.hideLoading()
-                it.activity?.finish()
-                it.activity?.startActivity(Intent(it.activity, MainActivity::class.java))
-            }
-        }
-
-
     }
 
 }

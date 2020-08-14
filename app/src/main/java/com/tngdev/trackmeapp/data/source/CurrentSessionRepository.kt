@@ -96,4 +96,9 @@ class CurrentSessionRepository @Inject constructor(
             sessionDao.updateSession(session)
         }
     }
+
+    suspend fun updateCurrentSession(session: Session, thumbnailPath: String) {
+        session.thumbnailPath = thumbnailPath
+        sessionDao.updateSession(session)
+    }
 }

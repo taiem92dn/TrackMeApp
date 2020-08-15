@@ -19,4 +19,6 @@
 
     <string name="distance_session_text">Distance</string>
     <string name="avg_speed_session_text">Avg. Speed</string>
+    <string name="hide_button_text">Hide</string>
+    <string name="item_history_duration_text">Duration</string>
 </resources>

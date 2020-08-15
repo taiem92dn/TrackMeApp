@@ -21,6 +21,7 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -149,28 +150,42 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         buildLocationSettingsRequest()
 
         setupUI()
+
+        initMap()
     }
 
-    private fun setupUI() {
+    private fun initMap() {
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
 
-        viewModel.currSession.observe(viewLifecycleOwner) {session ->
-            session?.let {
-                if (it.session.isPause) {
-                    binding.tvTextOfFABStart.text = getString(R.string.resume_button_text)
+        mapFragment.getMapAsync(this)
+    }
+
+    private fun setupUI() {
+
+        viewModel.currSession.observe(viewLifecycleOwner) {sessionWithLocations ->
+            sessionWithLocations?.session?.apply {
+                updateUISessionValue(distance, null)
+                updateTimeValue(duration)
+                if (isPause) {
+                    binding.flButtonResume.visibility = View.VISIBLE
                     binding.flButtonStop.visibility = View.VISIBLE
+                    binding.flButtonStart.visibility = View.GONE
                 }
                 else {
                     binding.tvTextOfFABStart.text = getString(R.string.pause_button_text)
+                    binding.flButtonStart.visibility = View.VISIBLE
                     binding.flButtonStop.visibility = View.GONE
+                    binding.flButtonResume.visibility = View.GONE
                 }
             }
-            session?:let {
+
+            sessionWithLocations?:let {
                 binding.tvTextOfFABStart.text = getString(R.string.start_button_text)
+                binding.flButtonStart.visibility = View.VISIBLE
                 binding.flButtonStop.visibility = View.GONE
+                binding.flButtonResume.visibility = View.GONE
             }
         }
 
@@ -183,9 +198,6 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                     appPreferencesHelper.isTrackingLocation -> {
                         handlePauseRecording()
                     }
-                    viewModel.isPausing.value == true -> {
-                        handleResumeRecording()
-                    }
                     else -> {
                         handleStartRecording()
                     }
@@ -193,10 +205,19 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
             }
         }
 
+        binding.fabResume.setOnClickListener {
+            if (viewModel.isPausing.value == true)
+                handleResumeRecording()
+        }
+
         binding.fabStop.setOnClickListener {
             if (viewModel.isPausing.value == true) {
                 handleStopRecording()
             }
+        }
+
+        binding.tvHide.setOnClickListener {
+            requireActivity().onBackPressed()
         }
     }
 
@@ -220,7 +241,13 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         MapUtils.setLocationEnabledWithPermission(this, map)
         getDeviceLocationUsePlayService()
 
-        drawRouteTracking(viewModel.currSession.value)
+        val observer = object : Observer<SessionWithLocations?> {
+            override fun onChanged(t: SessionWithLocations?) {
+                drawRouteTracking(t)
+                viewModel.currSession.removeObserver(this)
+            }
+        }
+        viewModel.currSession.observe(this, observer)
 //        mMap?.let { MapUtils.zoomToCurrentPosition(it, mLastKnownLocation) }
     }
 
@@ -319,7 +346,7 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                         val distance = intent.getDoubleExtra(ForegroundOnlyLocationService.EXTRA_DISTANCE, 0.0)
                         val location = intent.getParcelableExtra<Location>(ForegroundOnlyLocationService.EXTRA_LOCATION)
                         updateUISessionValue(distance, speed)
-                        drawRouteTracking(viewModel.currSession.value)
+//                        drawRouteTracking(viewModel.currSession.value)
                         location ?.let {
                             addPointToTrackingRoute(LatLng(location.latitude, location.longitude))
                             moveMapToCurrentLocation(it)
@@ -361,16 +388,13 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun handleStopRecording() {
-        stopLocationUpdates{
-            // stop ForegroundOnlyLocationService
-            context?.stopService(Intent(context, ForegroundOnlyLocationService::class.java))
-        }
+        // stop ForegroundOnlyLocationService
+        context?.stopService(Intent(context, ForegroundOnlyLocationService::class.java))
 
         if (mRouteLatLngs.size > 0) {
             drawEndLocation(mRouteLatLngs[mRouteLatLngs.size - 1])
         }
-        resetUI()
-
+//        resetUI()
 
         showLoading("Saving session")
         viewModel.stopCurrentSession()
@@ -387,12 +411,14 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun handlePauseRecording() {
-        stopLocationUpdates{}
+        stopLocationUpdates()
     }
 
     @SuppressLint("SetTextI18n")
-    fun updateUISessionValue(distance : Double, speed : Double) {
-        binding.tvCurrSpeed.text = String.format("%.1f km/h", speed)
+    fun updateUISessionValue(distance : Double, speed : Double? = null) {
+        speed ?. let {
+            binding.tvCurrSpeed.text = String.format("%.1f km/h", it)
+        }
         binding.tvDistance.text = String.format("%.1f km", distance / 1000)
 
         Log.d(TAG, "updateUISessionValue")
@@ -633,16 +659,13 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
     /**
      * Removes location updates from the FusedLocationApi.
      */
-    private fun stopLocationUpdates(complete: ()->Unit) {
+    private fun stopLocationUpdates() {
         if (!appPreferencesHelper.isTrackingLocation) {
             return
         }
-        // It is a good practice to remove location requests when the activity is in a paused or
-        // stopped state. Doing so helps battery performance and is especially
-        // recommended in applications that request frequent location updates.
-        foregroundOnlyLocationService?.unsubscribeToLocationUpdates() {
+
+        foregroundOnlyLocationService?.unsubscribeToLocationUpdates {
             viewModel.pauseCurrentSession()
-            complete()
         }
     }
 

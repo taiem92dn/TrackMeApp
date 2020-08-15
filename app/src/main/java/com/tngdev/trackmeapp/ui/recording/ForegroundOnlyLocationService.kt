@@ -19,33 +19,28 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.res.Configuration
 import android.location.Location
 import android.os.*
-import androidx.core.app.NotificationCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.TaskStackBuilder
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
-
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.location.*
 import com.tngdev.trackmeapp.AppPreferencesHelper
 import com.tngdev.trackmeapp.R
 import com.tngdev.trackmeapp.data.source.CurrentSessionRepository
-import com.tngdev.trackmeapp.util.MapUtils
+import com.tngdev.trackmeapp.ui.MainActivity
 import com.tngdev.trackmeapp.util.Utils
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -247,8 +242,8 @@ class ForegroundOnlyLocationService : LifecycleService() {
             removeTask.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     stopTimer()
-                    Log.d(TAG, "Location Callback removed.")
                     complete()
+                    Log.d(TAG, "Location Callback removed.")
                 } else {
                     Log.d(TAG, "Failed to remove Location Callback.")
                 }
@@ -336,10 +331,14 @@ class ForegroundOnlyLocationService : LifecycleService() {
         // 2. Build the BIG_TEXT_STYLE.
         val bigTextStyle = NotificationCompat.BigTextStyle()
             .bigText(mainNotificationText)
-            .setBigContentTitle(titleText)
+//            .setBigContentTitle(titleText)
 
         // 3. Set up main Intent/Pending Intents for notification.
-        val launchActivityIntent = Intent(this, RecordingActivity::class.java)
+        val launchActivityIntent = Intent(this, MainActivity::class.java)
+        launchActivityIntent.addCategory(Intent.CATEGORY_LAUNCHER)
+        launchActivityIntent.action = Intent.ACTION_MAIN
+        launchActivityIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+        launchActivityIntent.putExtra(EXTRA_FROM_NOTIFICATION, true)
 
         val cancelIntent = Intent(this, ForegroundOnlyLocationService::class.java)
         cancelIntent.putExtra(EXTRA_CANCEL_LOCATION_TRACKING_FROM_NOTIFICATION, true)
@@ -349,6 +348,10 @@ class ForegroundOnlyLocationService : LifecycleService() {
 
         val activityPendingIntent = PendingIntent.getActivity(
             this, 0, launchActivityIntent, 0)
+//        val activityPendingIntent = TaskStackBuilder.create(this).run {
+//            addNextIntentWithParentStack(launchActivityIntent)
+//            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+//        }
 
         // 4. Build and issue the notification.
         // Notification Channel Id is ignored for Android pre O (26).
@@ -357,13 +360,14 @@ class ForegroundOnlyLocationService : LifecycleService() {
 
         return notificationCompatBuilder
             .setStyle(bigTextStyle)
-            .setContentTitle(titleText)
+//            .setContentTitle(titleText)
             .setContentText(mainNotificationText)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setOngoing(true)
-            .setOnlyAlertOnce(true)
+            .setNotificationSilent()
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setContentIntent(activityPendingIntent)
 //            .addAction(
 //                R.drawable.ic_launch, getString(R.string.launch_activity),
 //                activityPendingIntent
@@ -434,6 +438,7 @@ class ForegroundOnlyLocationService : LifecycleService() {
         internal val ACTION_STOP_SERVICE = "$PACKAGE_NAME.action.ACTION_STOP_SERVICE"
         internal val ACTION_UPDATE_TIMER = "$PACKAGE_NAME.action.ACTION_UPDATE_TIMER"
         internal val EXTRA_DURATION = "$PACKAGE_NAME.extra.DURATION"
+        val EXTRA_FROM_NOTIFICATION = "$PACKAGE_NAME.extra.FROM_NOTIFICATION"
 
         internal val ACTION_UPDATE_SESSION_INFO = "$PACKAGE_NAME.UPDATE_SESSION_INFO"
         internal val EXTRA_DISTANCE = "${PACKAGE_NAME}.extra.DISTANCE"

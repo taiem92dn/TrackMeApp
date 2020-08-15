@@ -40,12 +40,12 @@ class CurrentSessionRepository @Inject constructor(
                         avgSpeed += location.speed
                     }
                     avgSpeed /= locations.size
-
                 }
 
                 session.apply {
                     endTime = System.currentTimeMillis()
                     isPause = false
+                    this.avgSpeed = avgSpeed
                 }
 
                 sessionDao.updateSession(session)
@@ -87,7 +87,7 @@ class CurrentSessionRepository @Inject constructor(
                 val to = locations[locations.size-1]
                 val distance = MapUtils.meterDistanceBetweenPoints(from.latitude, from.longitude, to.latitude, to.longitude)
                 session.distance += distance
-                session.avgSpeed = distance / session.duration
+                session.avgSpeed = session.distance / session.duration
             }
             if (session.isResumingAfterPause) {
                 session.isResumingAfterPause = false

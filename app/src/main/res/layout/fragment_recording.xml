@@ -7,16 +7,37 @@
               android:orientation="vertical"
               tools:context=".ui.recording.RecordingFragment">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+        <TextView
+            android:id="@+id/tv_hide"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:background="?attr/selectableItemBackground"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/colorPrimary"
+            android:padding="@dimen/default_margin_xsmall"
+            android:text="@string/hide_button_text"/>
+
+    </LinearLayout>
+
     <fragment android:id="@+id/map"
               android:name="com.google.android.gms.maps.SupportMapFragment"
               android:layout_width="match_parent"
               android:layout_height="0dp"
-              android:layout_weight="2"/>
+              android:layout_weight="1"/>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:background="@android:color/white"
         android:gravity="center_horizontal"
         android:orientation="vertical">
@@ -24,20 +45,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-                android:orientation="vertical"
-                android:layout_marginTop="@dimen/default_margin_small">
+            android:orientation="vertical"
+            android:layout_margin="@dimen/default_margin_small">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                style="@style/RecordCaptionText"
                 android:text="@string/time"/>
             <TextView
                 android:id="@+id/tvTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="00:00:00"
-                style="@style/TextValue"
-                android:textSize="20sp"/>
+                android:fontFamily="sans-serif"
+                android:textSize="32sp"
+                android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                android:text="00:00:00"/>
         </LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:layout_marginStart="@dimen/default_margin_small"
+            android:layout_marginEnd="@dimen/default_margin_small"
+            android:background="@android:color/darker_gray"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -52,14 +81,21 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/default_margin_small"
+                    style="@style/RecordCaptionText"
                     android:text="@string/distance_recording_text"/>
                 <TextView
                     android:id="@+id/tvDistance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    style="@style/TextValue"
+                    android:fontFamily="sans-serif-light"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:text="0.0 km"/>
             </LinearLayout>
+            <View
+                android:layout_width="1px"
+                android:layout_height="match_parent"
+                android:background="@android:color/darker_gray"/>
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -69,12 +105,15 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/default_margin_small"
+                    style="@style/RecordCaptionText"
                     android:text="@string/current_speed_recording_text"/>
                 <TextView
                     android:id="@+id/tvCurrSpeed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    style="@style/TextValue"
+                    android:fontFamily="sans-serif-light"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
                     android:text="0.0 km/h"/>
             </LinearLayout>
         </LinearLayout>
@@ -82,15 +121,20 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/default_margin_small"
             android:gravity="center"
             android:orientation="horizontal">
             <FrameLayout
+                android:id="@+id/flButtonStart"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:padding="@dimen/default_margin_normal">
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/fabStart"
                     android:layout_width="@dimen/button_recording_size"
                     android:layout_height="@dimen/button_recording_size"
+                    app:elevation="0dp"
                     app:backgroundTint="@color/colorPrimary"
                     android:src="@android:color/transparent"/>
                 <TextView
@@ -100,18 +144,44 @@
                     android:layout_gravity="center"
                     android:elevation="16dp"
                     android:textColor="@android:color/white"
+                    android:fontFamily="sans-serif-black"
                     android:text="@string/start_button_text"/>
+            </FrameLayout>
+            <FrameLayout
+                android:id="@+id/flButtonResume"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:padding="@dimen/default_margin_normal">
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabResume"
+                    android:layout_width="@dimen/button_recording_size"
+                    android:layout_height="@dimen/button_recording_size"
+                    app:elevation="3dp"
+                    app:backgroundTint="@android:color/white"
+                    android:src="@android:color/transparent"/>
+                <TextView
+                    android:id="@+id/tvTextOfFABResume"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:elevation="16dp"
+                    android:textColor="@color/colorPrimary"
+                    android:fontFamily="sans-serif-black"
+                    android:text="@string/resume_button_text"/>
             </FrameLayout>
             <FrameLayout
                 android:id="@+id/flButtonStop"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:layout_marginLeft="@dimen/default_margin_normal">
+                android:clipToPadding="false"
+                android:padding="@dimen/default_margin_normal"
+                android:layout_marginStart="@dimen/default_margin_normal">
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/fabStop"
                     android:layout_width="@dimen/button_recording_size"
                     android:layout_height="@dimen/button_recording_size"
+                    app:elevation="0dp"
                     app:backgroundTint="@color/colorPrimary"
                     android:src="@android:color/transparent"/>
                 <TextView
@@ -121,6 +191,7 @@
                     android:layout_gravity="center"
                     android:elevation="16dp"
                     android:textColor="@android:color/white"
+                    android:fontFamily="sans-serif-black"
                     android:text="@string/stop_button_text"/>
             </FrameLayout>
         </LinearLayout>

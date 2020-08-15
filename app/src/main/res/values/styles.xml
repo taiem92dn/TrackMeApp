@@ -21,6 +21,16 @@
         <item name="android:textSize">@dimen/font_size_large</item>
     </style>
 
+    <style name="RecordCaptionText">
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Caption</item>
+        <item name="fontFamily">sans-serif-light</item>
+    </style>
+
+    <style name="CaptionText">
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Caption</item>
+        <item name="fontFamily">sans-serif-medium</item>
+    </style>
+
     <style name="TextValueHistory">
         <item name="android:textColor">@android:color/black</item>
         <item name="android:textSize">@dimen/font_size_large</item>

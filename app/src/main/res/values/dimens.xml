@@ -19,6 +19,6 @@
     <dimen name="default_margin_large">48dp</dimen>
     <dimen name="default_margin_xlarge">72dp</dimen>
 
-    <dimen name="button_recording_size">64dp</dimen>
+    <dimen name="button_recording_size">80dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
 </resources>

@@ -34,6 +34,11 @@ class Utils {
             return format.format(Date(time))
         }
 
+        fun dateToStringWithSecond(time: Long) : String {
+            val format = SimpleDateFormat("dd-mm-yyyy hh:mm:ss", Locale.getDefault())
+            return format.format(Date(time))
+        }
+
         fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor {
             val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)
             vectorDrawable!!.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)

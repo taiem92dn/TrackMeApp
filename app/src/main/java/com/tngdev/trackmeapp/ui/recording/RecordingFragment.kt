@@ -178,6 +178,12 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                     binding.flButtonStart.visibility = View.VISIBLE
                     binding.flButtonStop.visibility = View.GONE
                     binding.flButtonResume.visibility = View.GONE
+
+                    // Active session is not pause but not tracking location, so should
+                    // pause session (maybe session restore after app war killed or device turn on)
+                    if (!appPreferencesHelper.isTrackingLocation) {
+                        viewModel.pauseCurrentSession()
+                    }
                 }
             }
 
@@ -241,6 +247,11 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         MapUtils.setLocationEnabledWithPermission(this, map)
         getDeviceLocationUsePlayService()
 
+        showSessionRouteOnMap()
+//        mMap?.let { MapUtils.zoomToCurrentPosition(it, mLastKnownLocation) }
+    }
+
+    private fun showSessionRouteOnMap() {
         val observer = object : Observer<SessionWithLocations?> {
             override fun onChanged(t: SessionWithLocations?) {
                 drawRouteTracking(t)
@@ -248,21 +259,30 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
             }
         }
         viewModel.currSession.observe(this, observer)
-//        mMap?.let { MapUtils.zoomToCurrentPosition(it, mLastKnownLocation) }
+    }
+
+
+    private fun drawRouteTracking(sessionWithLocations: SessionWithLocations?) {
+        // redraw route tracking
+        if (map != null) {
+            mRouteLatLngs.clear()
+            for (polyLine in mRoutePolyLines)
+                polyLine.remove()
+            mRoutePolyLines.clear()
+            sessionWithLocations?.let { setUpRouteTracking(it) }
+        }
     }
 
     private fun setUpRouteTracking(sessionWithLocations: SessionWithLocations) {
         if (mRoutePolyLines.isEmpty()) {
-            appPreferencesHelper.currentSessionId ?.let {
-                val latLngs = ArrayList<LatLng>()
-                sessionWithLocations.apply {
-                    if (locations.isNotEmpty()) {
-                        for (location in locations) {
-                            latLngs.add(LatLng(location.latitude, location.longitude))
-                        }
-
-                        renderTrackingRoute(latLngs)
+            val latLngs = ArrayList<LatLng>()
+            sessionWithLocations.apply {
+                if (locations.isNotEmpty()) {
+                    for (location in locations) {
+                        latLngs.add(LatLng(location.latitude, location.longitude))
                     }
+
+                    renderTrackingRoute(latLngs)
                 }
             }
         }
@@ -312,6 +332,9 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
             IntentFilter(
                 ForegroundOnlyLocationService.ACTION_UPDATE_TIMER)
         )
+
+        // Refresh session route when app come to onResume()
+        showSessionRouteOnMap()
     }
 
     override fun onPause() {
@@ -319,17 +342,6 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
             foregroundOnlyBroadcastReceiver
         )
         super.onPause()
-    }
-
-    private fun drawRouteTracking(sessionWithLocations: SessionWithLocations?) {
-        // redraw route tracking
-        if (map != null) {
-            mRouteLatLngs.clear()
-            for (polyLine in mRoutePolyLines)
-                polyLine.remove()
-            mRoutePolyLines.clear()
-            sessionWithLocations?.let { setUpRouteTracking(it) }
-        }
     }
 
 

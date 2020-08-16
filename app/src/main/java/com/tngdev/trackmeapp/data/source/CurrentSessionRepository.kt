@@ -57,6 +57,7 @@ class CurrentSessionRepository @Inject constructor(
     }
 
     suspend fun resumeCurrentSession(session: Session) {
+        appPreferencesHelper.currentSessionId = session.id
         // update to db
         session.apply {
             isPause = false
@@ -97,7 +98,8 @@ class CurrentSessionRepository @Inject constructor(
                 val from = locations[locations.size-2]
                 val to = locations[locations.size-1]
                 val distance = MapUtils.meterDistanceBetweenPoints(from.latitude, from.longitude, to.latitude, to.longitude)
-                Log.d("TAG", "insertLocation: $distance  ${session.isResumingAfterPause} ${Utils.dateToString(location.time)}")
+                Log.d("TAG", "insertLocation: $distance  " +
+                        "${session.isResumingAfterPause} ${Utils.dateToStringWithSecond(location.time)}")
             }
             if (locations.size > 1 && !session.isResumingAfterPause) {
                 val from = locations[locations.size-2]

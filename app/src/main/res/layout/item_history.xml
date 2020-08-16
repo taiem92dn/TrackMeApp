@@ -38,8 +38,8 @@
                     android:id="@+id/tv_session_start_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="August 26, 2020 at 10:09 AM"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+                    style="@style/CaptionText"
+                    android:text="August 26, 2020 at 10:09 AM"/>
             </LinearLayout>
 
             <LinearLayout
@@ -57,7 +57,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/default_margin_tiny"
                         android:text="@string/distance_session_text"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+                        style="@style/CaptionText" />
 
                     <TextView
                         android:id="@+id/tvDistance"
@@ -86,8 +86,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/default_margin_tiny"
-                        android:text="@string/avg_speed_session_text"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+                        style="@style/CaptionText"
+                        android:text="@string/avg_speed_session_text" />
 
                     <TextView
                         android:id="@+id/tvAvgSpeed"
@@ -108,9 +108,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/default_margin_tiny"
-                        android:text="@string/distance_session_text"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                        android:visibility="invisible" />
+                        style="@style/CaptionText"
+                        android:text="@string/item_history_duration_text" />
 
                     <TextView
                         android:id="@+id/tvDuration"

@@ -1,6 +1,7 @@
 package com.tngdev.trackmeapp.data.source.local
 
 import androidx.lifecycle.LiveData
+import androidx.paging.PagingSource
 import androidx.room.*
 import com.tngdev.trackmeapp.data.model.Location
 import com.tngdev.trackmeapp.data.model.Session
@@ -13,7 +14,7 @@ interface SessionDao {
     suspend fun getSessionById(id: String): Session?
 
     @Query("SELECT * FROM sessions WHERE endTime != 0 ORDER BY startTime DESC")
-    fun observeAllHistorySessions(): LiveData<List<Session>>
+    fun observeAllHistorySessions(): PagingSource<Int, Session>
 
     @Transaction
     @Query("SELECT * FROM sessions WHERE endTime == 0")

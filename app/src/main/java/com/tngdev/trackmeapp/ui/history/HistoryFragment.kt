@@ -7,14 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.observe
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.tngdev.trackmeapp.R
 import com.tngdev.trackmeapp.databinding.FragmentHistoryBinding
 import com.tngdev.trackmeapp.ui.recording.RecordingActivity
-import com.tngdev.trackmeapp.ui.recording.RecordingFragment
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class HistoryFragment : Fragment() {
@@ -53,9 +53,11 @@ class HistoryFragment : Fragment() {
         adapter = HistoryAdapter()
         binding.rvHistorySessions.layoutManager = LinearLayoutManager(requireContext())
         binding.rvHistorySessions.adapter = adapter
-        viewModel.historySessions.observe(viewLifecycleOwner) { sessions ->
-            adapter.data = sessions
-            adapter.notifyDataSetChanged()
+        // Subscribe the adapter to the ViewModel, so the items in the adapter are refreshed
+        // when the list changes
+        lifecycleScope.launch {
+            @OptIn(ExperimentalCoroutinesApi::class)
+            viewModel.historySessions.collectLatest { adapter.submitData(it) }
         }
     }
 }

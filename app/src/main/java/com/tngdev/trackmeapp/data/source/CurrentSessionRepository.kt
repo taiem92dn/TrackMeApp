@@ -1,5 +1,6 @@
 package com.tngdev.trackmeapp.data.source
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.tngdev.trackmeapp.AppPreferencesHelper
@@ -8,6 +9,7 @@ import com.tngdev.trackmeapp.data.model.Session
 import com.tngdev.trackmeapp.data.model.SessionWithLocations
 import com.tngdev.trackmeapp.data.source.local.SessionDao
 import com.tngdev.trackmeapp.util.MapUtils
+import com.tngdev.trackmeapp.util.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -59,6 +61,7 @@ class CurrentSessionRepository @Inject constructor(
         session.apply {
             isPause = false
             isResumingAfterPause = true
+            ignoreLocationsAfterPauseCount = Session.IGNORE_LOCATION_AFTER_PAUSED_NUMBER
 
             sessionDao.updateSession(this)
         }
@@ -82,15 +85,26 @@ class CurrentSessionRepository @Inject constructor(
         sessionDao.insertLocation(location)
 
         currentSession.value?.apply {
+
+            if (session.isResumingAfterPause && session.ignoreLocationsAfterPauseCount == 0) {
+                session.isResumingAfterPause = false
+            }
+            else if (session.ignoreLocationsAfterPauseCount > 0) {
+                session.ignoreLocationsAfterPauseCount--
+            }
+
+            if (locations.size > 1) {
+                val from = locations[locations.size-2]
+                val to = locations[locations.size-1]
+                val distance = MapUtils.meterDistanceBetweenPoints(from.latitude, from.longitude, to.latitude, to.longitude)
+                Log.d("TAG", "insertLocation: $distance  ${session.isResumingAfterPause} ${Utils.dateToString(location.time)}")
+            }
             if (locations.size > 1 && !session.isResumingAfterPause) {
                 val from = locations[locations.size-2]
                 val to = locations[locations.size-1]
                 val distance = MapUtils.meterDistanceBetweenPoints(from.latitude, from.longitude, to.latitude, to.longitude)
                 session.distance += distance
                 session.avgSpeed = session.distance / session.duration
-            }
-            if (session.isResumingAfterPause) {
-                session.isResumingAfterPause = false
             }
 
             sessionDao.updateSession(session)

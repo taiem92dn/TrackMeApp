@@ -15,7 +15,14 @@ data class Session(
     var duration: Long = 0, // second
     var isPause: Boolean = false,
     var isResumingAfterPause: Boolean = false,
+    /**
+     * Use to ignore some locations after resuming from paused status
+     */
+    var ignoreLocationsAfterPauseCount: Int = 0,
     var thumbnailPath: String = ""
-
 ) {
+
+    companion object {
+        const val IGNORE_LOCATION_AFTER_PAUSED_NUMBER = 5
+    }
 }

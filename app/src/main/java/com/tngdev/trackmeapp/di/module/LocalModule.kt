@@ -3,6 +3,7 @@ package com.tngdev.trackmeapp.di.module
 import android.app.Application
 import androidx.room.Room
 import com.tngdev.trackmeapp.data.source.local.AppDatabase
+import com.tngdev.trackmeapp.data.source.local.MigrationDB
 import com.tngdev.trackmeapp.data.source.local.SessionDao
 import dagger.Module
 import dagger.Provides
@@ -17,7 +18,9 @@ object LocalModule {
     @Provides
     @Singleton
     fun provideAppDB(app: Application): AppDatabase {
-        return Room.databaseBuilder(app, AppDatabase::class.java, "TrackMeDB").build()
+        return Room.databaseBuilder(app, AppDatabase::class.java, "TrackMeDB")
+            .addMigrations(MigrationDB.MIGRATION_1_2)
+            .build()
     }
 
     @Provides

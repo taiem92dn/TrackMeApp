@@ -76,7 +76,7 @@ class ForegroundOnlyLocationService : LifecycleService() {
     // LocationCallback - Called when FusedLocationProviderClient has a new Location.
     private lateinit var locationCallback: LocationCallback
 
-    private val mHandler = Handler()
+    private val mHandler = Handler(Looper.getMainLooper())
 
     private var mCurrentDuration : Long = 0
 
@@ -93,6 +93,8 @@ class ForegroundOnlyLocationService : LifecycleService() {
         Log.d(TAG, "onCreate()")
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        appPreferencesHelper.isTrackingLocation = false
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -203,6 +205,7 @@ class ForegroundOnlyLocationService : LifecycleService() {
         Log.d(TAG, "onDestroy()")
         stopForeground(true)
         serviceRunningInForeground = false
+        appPreferencesHelper.isTrackingLocation = false
         stopTimer()
         mainScope.cancel()
     }

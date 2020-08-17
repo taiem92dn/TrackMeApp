@@ -23,10 +23,10 @@ data class Session(
     /**
      * Use to create LatLngBound for zoom map camera fit all routes
      */
-    var minLat: Double? = Double.MAX_VALUE,
-    var minLng: Double? = Double.MAX_VALUE,
-    var maxLat: Double? = Double.MIN_VALUE,
-    var maxLng: Double? = Double.MIN_VALUE
+    var minLat: Double? = null,
+    var minLng: Double? = null,
+    var maxLat: Double? = null,
+    var maxLng: Double? = null
 
 ) {
 

@@ -51,6 +51,8 @@ class HistoryFragment : Fragment() {
 
     private fun setupUI() {
         adapter = HistoryAdapter()
+        adapter.emptyView = binding.tvHistoryListEmpty
+
         binding.rvHistorySessions.layoutManager = LinearLayoutManager(requireContext())
         binding.rvHistorySessions.adapter = adapter
         // Subscribe the adapter to the ViewModel, so the items in the adapter are refreshed

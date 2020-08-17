@@ -20,6 +20,8 @@ class HistoryAdapter : PagingDataAdapter<Session, HistoryAdapter.ViewHolder>(dif
 
     private lateinit var context: Context
 
+    var emptyView: View?= null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         context = parent.context
         val binding = ItemHistoryBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -40,6 +42,12 @@ class HistoryAdapter : PagingDataAdapter<Session, HistoryAdapter.ViewHolder>(dif
                 session.name
 
         Glide.with(holder.itemView.context).load(session.thumbnailPath).into(holder.itemView.ivSession)
+    }
+
+    override fun getItemCount(): Int {
+        emptyView?.visibility = if (super.getItemCount() == 0) View.VISIBLE else View.GONE
+
+        return super.getItemCount()
     }
 
     class ViewHolder(val binding: ItemHistoryBinding) : RecyclerView.ViewHolder(binding.root)

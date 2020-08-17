@@ -162,8 +162,9 @@
                 android:padding="@dimen/default_margin_normal">
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/fabStart"
-                    android:layout_width="@dimen/button_recording_size"
-                    android:layout_height="@dimen/button_recording_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:fabCustomSize="@dimen/button_recording_size"
                     app:elevation="0dp"
                     app:backgroundTint="@color/colorPrimary"
                     android:src="@android:color/transparent"/>
@@ -185,8 +186,9 @@
                 android:padding="@dimen/default_margin_normal">
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/fabResume"
-                    android:layout_width="@dimen/button_recording_size"
-                    android:layout_height="@dimen/button_recording_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:fabCustomSize="@dimen/button_recording_size"
                     app:elevation="3dp"
                     app:backgroundTint="@android:color/white"
                     android:src="@android:color/transparent"/>
@@ -209,8 +211,9 @@
                 android:layout_marginStart="@dimen/default_margin_normal">
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/fabStop"
-                    android:layout_width="@dimen/button_recording_size"
-                    android:layout_height="@dimen/button_recording_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:fabCustomSize="@dimen/button_recording_size"
                     app:elevation="0dp"
                     app:backgroundTint="@color/colorPrimary"
                     android:src="@android:color/transparent"/>

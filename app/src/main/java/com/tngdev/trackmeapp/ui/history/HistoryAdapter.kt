@@ -1,5 +1,7 @@
 package com.tngdev.trackmeapp.ui.history
 
+import android.content.Context
+import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +18,10 @@ import kotlinx.android.synthetic.main.item_history.view.*
 
 class HistoryAdapter : PagingDataAdapter<Session, HistoryAdapter.ViewHolder>(diffCallback) {
 
+    private lateinit var context: Context
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        context = parent.context
         val binding = ItemHistoryBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
@@ -24,10 +29,15 @@ class HistoryAdapter : PagingDataAdapter<Session, HistoryAdapter.ViewHolder>(dif
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val session = getItem(position)
         session ?: return
-        holder.binding.tvAvgSpeed.text = String.format("%.1f km/h", Utils.convertMpsToKmh(session?.avgSpeed!!))
+        holder.binding.tvAvgSpeed.text = String.format("%.1f km/h", Utils.convertMpsToKmh(session.avgSpeed))
         holder.binding.tvDistance.text = String.format("%.1f km", session.distance / 1000)
         holder.binding.tvDuration.text = Utils.convertDurationToString(session.duration)
-        holder.binding.tvSessionStartTime.text = Utils.dateToString(session.startTime)
+        holder.binding.tvSessionStartTime.text = Utils.formatToYesterdayOrToday(session.startTime)
+        holder.binding.tvSessionName.text =
+            if (TextUtils.isEmpty(session.name))
+                context.getString(R.string.default_session_name, Utils.getPeriodOfTime(session.startTime))
+            else
+                session.name
 
         Glide.with(holder.itemView.context).load(session.thumbnailPath).into(holder.itemView.ivSession)
     }

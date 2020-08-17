@@ -34,9 +34,40 @@ class Utils {
             return format.format(Date(time))
         }
 
+        fun formatToYesterdayOrToday(time: Long): String? {
+            val calendar = Calendar.getInstance()
+            calendar.time = Date(time)
+            val today = Calendar.getInstance()
+            val yesterday = Calendar.getInstance()
+            yesterday.add(Calendar.DATE, -1)
+            val timeFormatter = SimpleDateFormat("'at 'hh:mm aa", Locale.getDefault())
+            return if (calendar[Calendar.YEAR] == today[Calendar.YEAR]
+                && calendar[Calendar.DAY_OF_YEAR] == today[Calendar.DAY_OF_YEAR]
+            ) {
+                "Today " + timeFormatter.format(calendar.time)
+            } else if (calendar[Calendar.YEAR] == yesterday[Calendar.YEAR] && calendar[Calendar.DAY_OF_YEAR] == yesterday[Calendar.DAY_OF_YEAR]
+            ) {
+                "Yesterday " + timeFormatter.format(calendar.time)
+            } else {
+                dateToString(time)
+            }
+        }
+
         fun dateToStringWithSecond(time: Long) : String {
             val format = SimpleDateFormat("dd-mm-yyyy hh:mm:ss", Locale.getDefault())
             return format.format(Date(time))
+        }
+
+        fun getPeriodOfTime(time: Long): String {
+            val calendar = Calendar.getInstance()
+            calendar.time = Date(time)
+            return when (calendar.get(Calendar.HOUR_OF_DAY)) {
+                in 0..11 -> "Morning"
+                in 12..15 -> "Afternoon"
+                in 16..20 -> "Evening"
+                in 21..23 -> "Night"
+                else -> ""
+            }
         }
 
         fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor {

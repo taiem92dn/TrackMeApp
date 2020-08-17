@@ -20,6 +20,7 @@ object LocalModule {
     fun provideAppDB(app: Application): AppDatabase {
         return Room.databaseBuilder(app, AppDatabase::class.java, "TrackMeDB")
             .addMigrations(MigrationDB.MIGRATION_1_2)
+            .addMigrations(MigrationDB.MIGRATION_2_3)
             .build()
     }
 

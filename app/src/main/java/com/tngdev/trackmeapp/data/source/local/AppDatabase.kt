@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import com.tngdev.trackmeapp.data.model.Location
 import com.tngdev.trackmeapp.data.model.Session
 
-@Database(entities = [Session::class, Location::class], version = 2, exportSchema = false)
+@Database(entities = [Session::class, Location::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase(){
     abstract fun sessionDao() : SessionDao
 }

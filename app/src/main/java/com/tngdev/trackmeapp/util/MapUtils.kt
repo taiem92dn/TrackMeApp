@@ -3,6 +3,7 @@ package com.tngdev.trackmeapp.util
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
 import android.util.Log
 import androidx.core.app.ActivityCompat
@@ -10,6 +11,8 @@ import androidx.fragment.app.Fragment
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.PolygonOptions
 
 
 object MapUtils {
@@ -63,7 +66,7 @@ object MapUtils {
         return true
     }
 
-    fun setLocationEnabledWithPermission(pFragment: Fragment, pGoogleMap: GoogleMap?): Boolean {
+    fun setLocationEnabledWithPermission(pFragment: Fragment, pGoogleMap: GoogleMap?, enableLocation: Boolean = true): Boolean {
 
         if (pFragment.activity?.let { ActivityCompat.checkSelfPermission(it, Manifest.permission.ACCESS_FINE_LOCATION) } != PackageManager.PERMISSION_GRANTED
                 && pFragment.activity?.let { ActivityCompat.checkSelfPermission(it, Manifest.permission.ACCESS_COARSE_LOCATION) } != PackageManager.PERMISSION_GRANTED) {
@@ -78,25 +81,62 @@ object MapUtils {
             return false
         }
 
-        pGoogleMap?.isMyLocationEnabled = true
+        pGoogleMap?.isMyLocationEnabled = enableLocation
         return true
     }
 
     fun requestLocationPermission(pFragment: Fragment) {}
 
 
-    fun zoomToCurrentPosition(map: GoogleMap?, currentLocation: Location?) {
+    fun zoomToCurrentPosition(map: GoogleMap?, currentLocation: Location?,
+                              zoom: Float? = 15f, animate: Boolean = false) {
         if (currentLocation == null) {
             Log.d("TAG", "current location null")
             return
         }
         map?: return
+        zoom ?: return
 
         val latLng = LatLng(currentLocation.latitude, currentLocation.longitude)
-        val cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+        val cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, zoom)
 
         //mMap.addMarker(new MarkerOptions().position(latLng).title("You are here!").icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_ico)));
-        map.moveCamera(cameraUpdate)
+        if (animate)
+            map.animateCamera(cameraUpdate)
+        else
+            map.moveCamera(cameraUpdate)
+    }
+
+    fun zoomToLatLngBound(map: GoogleMap?, minLat: Double?, minLng: Double?,
+                          maxLat: Double?, maxLng: Double?, animate: Boolean = false) {
+        minLat ?: return
+        minLng ?: return
+        maxLat ?: return
+        maxLng ?: return
+
+        val latLngBounds = LatLngBounds.Builder()
+            .include(LatLng(minLat, minLng))
+            .include(LatLng(maxLat, maxLng))
+            .build()
+
+        val cameraUpdate = CameraUpdateFactory.newLatLngBounds(latLngBounds, 150)
+
+        if (animate) {
+            map?.animateCamera(cameraUpdate)
+//            drawBounds(map, latLngBounds)
+        }
+        else
+            map?.moveCamera(cameraUpdate)
+    }
+
+    private fun drawBounds(map: GoogleMap?, bounds: LatLngBounds, color: Int = Color.BLUE) {
+        val polygonOptions = PolygonOptions()
+            .add(LatLng(bounds.northeast.latitude, bounds.northeast.longitude))
+            .add(LatLng(bounds.southwest.latitude, bounds.northeast.longitude))
+            .add(LatLng(bounds.southwest.latitude, bounds.southwest.longitude))
+            .add(LatLng(bounds.northeast.latitude, bounds.southwest.longitude))
+            .strokeColor(color)
+        map?.addPolygon(polygonOptions)
     }
 
     fun zoomToPosition(mMap: GoogleMap, latLng: LatLng) {

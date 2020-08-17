@@ -14,6 +14,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.max
+import kotlin.math.min
 
 @Singleton
 class CurrentSessionRepository @Inject constructor(
@@ -86,7 +88,6 @@ class CurrentSessionRepository @Inject constructor(
         sessionDao.insertLocation(location)
 
         currentSession.value?.apply {
-
             if (session.isResumingAfterPause && session.ignoreLocationsAfterPauseCount == 0) {
                 session.isResumingAfterPause = false
             }
@@ -101,12 +102,21 @@ class CurrentSessionRepository @Inject constructor(
                 Log.d("TAG", "insertLocation: $distance  " +
                         "${session.isResumingAfterPause} ${Utils.dateToStringWithSecond(location.time)}")
             }
+
             if (locations.size > 1 && !session.isResumingAfterPause) {
                 val from = locations[locations.size-2]
                 val to = locations[locations.size-1]
                 val distance = MapUtils.meterDistanceBetweenPoints(from.latitude, from.longitude, to.latitude, to.longitude)
                 session.distance += distance
                 session.avgSpeed = session.distance / session.duration
+
+            }
+
+            session.apply {
+                minLat = minLat?.let { min(location.latitude, it) } ?: location.latitude
+                minLng = minLng?.let { min(location.longitude, it) } ?: location.longitude
+                maxLat = maxLat?.let { max(location.latitude, it) } ?: location.latitude
+                maxLng = maxLng?.let { max(location.longitude, it) } ?: location.longitude
             }
 
             sessionDao.updateSession(session)

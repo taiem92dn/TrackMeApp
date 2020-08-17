@@ -19,7 +19,15 @@ data class Session(
      * Use to ignore some locations after resuming from paused status
      */
     var ignoreLocationsAfterPauseCount: Int = 0,
-    var thumbnailPath: String = ""
+    var thumbnailPath: String = "",
+    /**
+     * Use to create LatLngBound for zoom map camera fit all routes
+     */
+    var minLat: Double? = Double.MAX_VALUE,
+    var minLng: Double? = Double.MAX_VALUE,
+    var maxLat: Double? = Double.MIN_VALUE,
+    var maxLng: Double? = Double.MIN_VALUE
+
 ) {
 
     companion object {

@@ -17,6 +17,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -209,11 +210,19 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
                     }
                 }
             }
+            else {
+                requestPermissions()
+            }
         }
 
         binding.fabResume.setOnClickListener {
-            if (viewModel.isPausing.value == true)
-                handleResumeRecording()
+            if (checkPermissions()) {
+                if (viewModel.isPausing.value == true)
+                    handleResumeRecording()
+            }
+            else {
+                requestPermissions()
+            }
         }
 
         binding.fabStop.setOnClickListener {
@@ -383,7 +392,10 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
             map?.cameraPosition?.target?.latitude ?: return,
             map?.cameraPosition?.target?.longitude ?: return) > 100
         ) {
-            MapUtils.zoomToCurrentPosition(map, currentLocation)
+            MapUtils.zoomToCurrentPosition(map,
+                currentLocation, map?.cameraPosition?.zoom,
+                animate = true
+            )
         }
     }
 
@@ -403,13 +415,11 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         // stop ForegroundOnlyLocationService
         context?.stopService(Intent(context, ForegroundOnlyLocationService::class.java))
 
-        if (mRouteLatLngs.size > 0) {
-            drawEndLocation(mRouteLatLngs[mRouteLatLngs.size - 1])
-        }
-//        resetUI()
-
         showLoading("Saving session")
+
         viewModel.stopCurrentSession()
+
+        setUpMapToTakeSnapShot()
         map?.snapshot(GoogleMap.SnapshotReadyCallback {
             viewModel.saveBitmapForCurrentSession(it)
         })
@@ -422,8 +432,31 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    private fun setUpMapToTakeSnapShot() {
+        if (mRouteLatLngs.size > 0) {
+            drawEndLocation(mRouteLatLngs[mRouteLatLngs.size - 1])
+        }
+
+        MapUtils.setLocationEnabledWithPermission(this, map, false)
+        viewModel.currSession.value?.session?.apply {
+            MapUtils.zoomToLatLngBound(
+                map,
+                minLat, minLng,
+                maxLat, maxLng
+            )
+        }
+    }
+
     private fun handlePauseRecording() {
         stopLocationUpdates()
+        viewModel.currSession.value?.session?.apply {
+            MapUtils.zoomToLatLngBound(
+                map,
+                minLat, minLng,
+                maxLat, maxLng,
+                animate = true
+            )
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -448,9 +481,9 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         binding.tvTime.text ="00:00:00"
     }
 
-    fun exitRecording() {
+    private fun exitRecording() {
         requireActivity().finish()
-        requireActivity().startActivity(Intent(requireActivity(), MainActivity::class.java))
+//        requireActivity().startActivity(Intent(requireActivity(), MainActivity::class.java))
     }
 
     /**
@@ -464,13 +497,13 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun requestPermissions() {
-        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity!!, Manifest.permission.ACCESS_FINE_LOCATION)
+        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
 
         // Provide an additional rationale to the user. This would happen if the user denied the
         // request previously, but didn't check the "Don't ask again" checkbox.
         if (shouldProvideRationale) {
             Log.i(TAG, "Displaying permission rationale to provide additional context.");
-            showSnackbar("enable permission use to recording", "OK",  View.OnClickListener {
+            showSnackbar("Enable permission use to recording", "OK",  View.OnClickListener {
                 // Request permission
                 requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                     REQUEST_PERMISSIONS_REQUEST_CODE)
@@ -759,16 +792,16 @@ class RecordingFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    var mPdLoading : ProgressDialog?= null
-
-    fun showLoading(message : String) {
-        mPdLoading ?: let {
-            mPdLoading = ProgressDialog.show(context, null, message)
-        }
+    private fun showLoading(message : String) {
+        binding.vgLoadingBar.visibility = View.VISIBLE
+        requireActivity().window.setFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
     }
 
-    fun hideLoading() {
-        mPdLoading?.dismiss()
+    private fun hideLoading() {
+        binding.vgLoadingBar.visibility = View.GONE
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
     }
 
 }

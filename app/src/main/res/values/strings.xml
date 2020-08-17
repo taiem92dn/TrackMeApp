@@ -21,4 +21,7 @@
     <string name="avg_speed_session_text">Avg. Speed</string>
     <string name="hide_button_text">Hide</string>
     <string name="item_history_duration_text">Duration</string>
+
+    <string name="default_session_name">%s activity</string>
+    <string name="saving_session_loading_message">Saving session</string>
 </resources>
